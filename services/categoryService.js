@@ -1,6 +1,7 @@
 const CategoryModel = require("../models/categoryModel");
 const slugify = require("slugify");
 const asyncHandel = require("express-async-handler");
+const apiError = require("../utils/apiError")
 
 // @desc  Get Categories
 // @route GET /api/v1/categories/
@@ -17,11 +18,12 @@ exports.getCategories = asyncHandel(async (req, res) => {
 // @route GET /api/v1/categories/:id
 // @access Public
 
-exports.getCategory = asyncHandel(async (req, res) => {
+exports.getCategory = asyncHandel(async (req, res, next) => {
   const { id } = req.params;
   const category = await CategoryModel.findById(id);
   if (!category) {
-    res.status(404).json({ msg: `this Category id ${id} not found` });
+    // res.status(404).json({ msg: `this Category id ${id} not found` });
+    return  next(new apiError(`this Category id ${id} not found`, 404));
   }
   res.status(200).json({ data: category });
 });
@@ -39,7 +41,7 @@ exports.createCategory = asyncHandel(async (req, res) => {
 // @route POST /api/v1/categories/:id
 // @access Public
 
-exports.updateCategory = asyncHandel(async (req, res) => {
+exports.updateCategory = asyncHandel(async (req, res, next) => {
   const { id } = req.params;
   const { name } = req.body;
 
@@ -50,7 +52,7 @@ exports.updateCategory = asyncHandel(async (req, res) => {
   );
 
   if (!category) {
-    return res.status(404).json({ msg: `This Category id ${id} not found` });
+    return next(new apiError(`this Category id ${id} not found`, 404));
   }
 
   res.status(200).json({ data: category });
@@ -61,11 +63,11 @@ exports.updateCategory = asyncHandel(async (req, res) => {
 // @access Private
 
 
-exports.deleteCategory = asyncHandel( async (req, res) => {
+exports.deleteCategory = asyncHandel( async (req, res, next) => {
   const { id } = req.params;
   const category = await CategoryModel.findByIdAndDelete(id);
   if (!category) {
-    return res.status(404).json({ msg: `This Category id ${id} not found` });
+    return next(new apiError(`this Category id ${id} not found`, 404));
   }
 
   res.status(204).send()

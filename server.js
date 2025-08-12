@@ -3,6 +3,8 @@ const dotenv = require("dotenv");
 dotenv.config({ path: "config.env" });
 const morgan = require("morgan");
 const mongoose = require("mongoose");
+const ApiError = require("./utils/apiError");
+const globalError = require("./middleware/globalError")
 
 const dbConnection = require("./config/database");
 const categoryRoutes = require("./routes/categoryRoutes");
@@ -23,10 +25,24 @@ if (process.env.NODE_ENV === "development") {
 
 
 // Routes
-
 app.use("/api/v1/categories", categoryRoutes);
 
+app.use("/", (req, res, next) => {
+  next(new ApiError(`Can not found this route ${req.originalUrl}`, 400));
+});
+
+// Handel Global error middleware 
+app.use(globalError)
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
+
+const server = app.listen(PORT, () => {
   console.log(`App running on port ${PORT}`);
 });
+
+process.on("unhandledRejection", (err) => {
+  console.log(`unhandledRejection Error: ${err}`)
+  server.close(() => {
+    console.log("Server Shutting down ");
+    process.exit(1);
+  })
+} )
